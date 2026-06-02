@@ -39,23 +39,28 @@ void App::Run()
     std::cin.get();
 }
 
-/// Print the application header and menu title.
+/// Print the full application menu.
 ///
-/// This is intentionally separate from GetMenuChoice so that the header
-/// remains visible before each prompt.
+/// This keeps the title and available actions together for clearer output
+/// and simplifies the input prompt flow.
 void App::ShowMenu() const
 {
-    std::cout << "------------------------Peeps-OOP-Demo------------------------\n";
+    std::cout
+        << "------------------------Peeps-OOP-Demo------------------------\n"
+        << "\t1) Add a peep\n"
+        << "\t2) Display all peeps\n"
+        << "\t3) Clone a peep\n"
+        << "\t4) Exit\n";
 }
 
 /// Query the user for a menu selection and validate the result.
 ///
-/// The GetValidatedInt helper ensures only 1-4 are accepted, so this method
-/// can safely cast the returned integer into the Choice enum.
+/// A narrow prompt encourages the menu display to remain separate from the
+/// selection logic.
 App::Choice App::GetMenuChoice() const
 {
-    const char menu[] = "\n\t\t1) Add a peep\n\t\t2) Display all peeps\n\t\t3) Clone a peep\n\t\t4) Exit\n\n\tSelection: ";
-    return static_cast<Choice>(GetValidatedInt(menu, 1, 4));
+    const char prompt[] = "\n\tSelection: ";
+    return static_cast<Choice>(GetValidatedInt(prompt, 1, 4));
 }
 
 /// Prompt the user for a name and return the entered value.
@@ -65,12 +70,16 @@ App::Choice App::GetMenuChoice() const
 std::string App::PromptName() const
 {
     std::string name;
-    std::cout << "------------------------Name?------------------------\n\t\tName:  ";
-    std::getline(std::cin, name);
-    if (name.empty())
+    do
     {
+        std::cout << "------------------------Name?------------------------\n\t\tName:  ";
         std::getline(std::cin, name);
-    }
+        if (name.empty())
+        {
+            std::cout << "\tName cannot be empty. Please enter a valid name.\n";
+        }
+    } while (name.empty());
+
     return name;
 }
 
@@ -90,7 +99,7 @@ void App::AddRecord()
     {
         auto teacher = std::make_unique<Teacher>();
         teacher->SetName(name);
-        int salary = GetValidatedInt("\n------------------------Salary?------------------------\n\t\tSalary:  ");
+        int salary = GetValidatedInt("\n------------------------Salary?------------------------\n\t\tSalary:  ", 0, 1000000);
         teacher->SetSalary(salary);
         peeps.push_back(std::move(teacher));
     }
@@ -98,7 +107,7 @@ void App::AddRecord()
     {
         auto student = std::make_unique<Student>();
         student->SetName(name);
-        const float gpa = static_cast<float>(GetValidatedInt("\n------------------------GPA?------------------------\n\t\tGPA:  "));
+        const float gpa = GetValidatedFloat("\n------------------------GPA?------------------------\n\t\tGPA:  ", 0.0f, 4.0f);
         student->SetGPA(gpa);
         peeps.push_back(std::move(student));
     }

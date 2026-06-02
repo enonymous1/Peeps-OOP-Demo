@@ -24,4 +24,11 @@ namespace InputUtils {
     int GetValidatedInt(std::string_view strMessage,
                         int nMinimumRange = 0,
                         int nMaximumRange = 0);
+
+    /// Prompt the user for a floating-point value and validate it.
+    ///
+    /// This is useful for values such as GPA, where decimals are allowed.
+    float GetValidatedFloat(std::string_view strMessage,
+                            float nMinimumRange = 0.0f,
+                            float nMaximumRange = 0.0f);
 }

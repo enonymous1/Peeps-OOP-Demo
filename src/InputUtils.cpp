@@ -55,4 +55,32 @@ int GetValidatedInt(std::string_view strMessage, int nMinimumRange, int nMaximum
     }
 }
 
+float GetValidatedFloat(std::string_view strMessage, float nMinimumRange, float nMaximumRange)
+{
+    float x;
+
+    while (true)
+    {
+        std::cout << strMessage;
+        std::cin >> x;
+
+        while (std::cin.fail())
+        {
+            ClearBuffer();
+            std::cout << "\n\tError, invalid input please try again:  ";
+            std::cin >> x;
+        }
+
+        ClearBuffer();
+
+        if ((nMaximumRange == 0.0f && nMinimumRange == 0.0f) ||
+            (x >= nMinimumRange && x <= nMaximumRange))
+        {
+            return x;
+        }
+
+        std::cout << "\n\tYour input was out of range, lets ride this ride again =)\n\n";
+    }
+}
+
 } // namespace InputUtils
