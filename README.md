@@ -1,36 +1,77 @@
-# PeePs Management System
+# Peeps-OOP-Demo
 
-This project is a simple console-based management system for "PeePs" (People). It's written in C++ and demonstrates the use of object-oriented programming concepts such as inheritance, polymorphism, and smart pointers.
+This project is a simple console-based management system for "Peeps" (People). It is written in C++ and demonstrates inheritance, polymorphism, cloning via a virtual `clone()` method, and smart pointer memory management.
 
-## Files
+## Project structure
 
-- `Header.h`: Contains utility functions for input validation and buffer clearing.
-- `Base.h`: Defines the abstract base class `Base` from which `Employee` and `Student` classes are derived.
-- `Employee.h` and `Student.h`: These are header files for `Employee` and `Student` classes respectively. Both classes inherit from the `Base` class.
-- `Employee.cpp` and `Student.cpp`: These are the implementation files for `Employee` and `Student` classes respectively.
-- `main.cpp`: Contains the main function and the logic for the management system.
+- `include/`
+  - `App.h`
+  - `Base.h`
+  - `Teacher.h`
+  - `InputUtils.h`
+  - `Student.h`
+- `src/`
+  - `main.cpp`
+  - `App.cpp`
+  - `InputUtils.cpp`
+  - `Base.cpp`
+  - `Teacher.cpp`
+  - `Student.cpp`
+- `CMakeLists.txt`
+- `build/`
 
-## Classes
+## Modules
 
-- `Base`: An abstract base class that represents a person. It has a virtual destructor and two pure virtual functions: `DisplayRecord()` and `clone()`.
-- `Employee`: A derived class from `Base` that represents an employee. It has additional data member `salary` and overrides the `DisplayRecord()` and `clone()` functions from `Base`.
-- `Student`: Another derived class from `Base` that represents a student. It has additional data member `gpa` and also overrides the `DisplayRecord()` and `clone()` functions from `Base`.
+- `App`: Contains the application flow, menu, and user interaction logic.
+- `InputUtils`: Handles validated integer input and input buffer clearing.
+- `Base`: Defines the abstract base class for all peeps.
+- `Teacher` / `Student`: Concrete derived types that implement `DisplayRecord()` and `clone()`.
 
-## Functions
+## Build
 
-- `AddRecord()`: Adds a new record to the system. The user can choose to add either an `Employee` or a `Student`.
-- `DisplayRecords()`: Displays all the records in the system.
-- `DuplicateRecord()`: Clones an existing record in the system.
+### Using CMake
 
-## How to Run
+```bash
+mkdir -p build
+cd build
+cmake ..
+cmake --build .
+```
 
-Compile and run the `main.cpp` file. The program will display a menu with four options:
+### Using g++ directly
 
-1. Add a peep: This option allows you to add a new record. You can choose to add either an `Employee` or a `Student`.
-2. Display all peeps: This option displays all the records in the system.
-3. Clone a peep: This option allows you to clone an existing record.
-4. Exit: This option exits the program.
+```bash
+g++ -std=c++14 src/main.cpp src/App.cpp src/InputUtils.cpp src/Base.cpp src/Teacher.cpp src/Student.cpp -Iinclude -o build/Peeps_OOP_Demo
+```
 
-## Note
+## Run
 
-This project uses smart pointers (`std::unique_ptr`) to manage the memory of `Employee` and `Student` objects, ensuring that there are no memory leaks.
+```bash
+./build/Peeps_OOP_Demo
+```
+
+## Usage
+
+The program shows a menu with four options:
+
+1. Add a peep
+2. Display all peeps
+3. Clone a peep
+4. Exit
+
+## Extending the project
+
+To add a new peep type, follow these steps:
+
+1. Add a new header in `include/`, e.g. `Manager.h`, inheriting from `Base`.
+2. Add an implementation file in `src/`, e.g. `Manager.cpp`, implementing `DisplayRecord()` and `clone()`.
+3. Add the new source file to `CMakeLists.txt` and update any build scripts.
+4. Update `src/App.cpp` to include the new header, add a menu option, and construct the new type when selected.
+
+For example, a `Trainer` class can store a specialization field instead of salary and provide a `DisplayRecord()` implementation that prints the trainer's name and specialization.
+
+## Notes
+
+- The project uses `std::unique_ptr` to manage dynamic object memory.
+- The code is organized into `src/` and `include/` to keep implementation and headers separate.
+- `InputUtils` centralizes input validation logic.
