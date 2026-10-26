@@ -29,7 +29,7 @@ On Windows the binary is `out/build/release/Release/Peeps_OOP_Demo.exe`.
 
 ## Sample session
 
-This is real output from the built program (add a teacher, display, clone, display again, exit):
+This is a real interactive session captured through a terminal, so the typed input is shown after each prompt (add a teacher, display, clone, display again, exit):
 
 ```
 ------------------------Peeps-OOP-Demo------------------------
@@ -38,21 +38,26 @@ This is real output from the built program (add a teacher, display, clone, displ
 	3) Clone a peep
 	4) Exit
 
-	Selection: ------------------------What kind of peep?------------------------
+	Selection: 1
+------------------------What kind of peep?------------------------
 
 		1) Teacher
 		2) Student
 
-	Selection: ------------------------Name?------------------------
-		Name:  
+	Selection: 1
+------------------------Name?------------------------
+		Name:  Ada
+
 ------------------------Salary?------------------------
-		Salary:  ------------------------Peeps-OOP-Demo------------------------
+		Salary:  50000
+------------------------Peeps-OOP-Demo------------------------
 	1) Add a peep
 	2) Display all peeps
 	3) Clone a peep
 	4) Exit
 
-	Selection: ------------------------Display Records------------------------
+	Selection: 2
+------------------------Display Records------------------------
 
 		1. Ada :: Salary == 50000
 
@@ -62,16 +67,19 @@ This is real output from the built program (add a teacher, display, clone, displ
 	3) Clone a peep
 	4) Exit
 
-	Selection: ------------------------Clone a peep------------------------
+	Selection: 3
+------------------------Clone a peep------------------------
 		There are 1 peeps in the records, choose one to clone.
-		Peep number: Cloned peep 1.
+		Peep number: 1
+Cloned peep 1.
 ------------------------Peeps-OOP-Demo------------------------
 	1) Add a peep
 	2) Display all peeps
 	3) Clone a peep
 	4) Exit
 
-	Selection: ------------------------Display Records------------------------
+	Selection: 2
+------------------------Display Records------------------------
 
 		1. Ada :: Salary == 50000
 
@@ -83,7 +91,7 @@ This is real output from the built program (add a teacher, display, clone, displ
 	3) Clone a peep
 	4) Exit
 
-	Selection: 
+	Selection: 4
 ```
 
 ## Usage
