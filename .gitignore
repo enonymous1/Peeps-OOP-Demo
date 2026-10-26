@@ -1,26 +1,31 @@
-# Prerequisites
-*.d
+# Build output (including CMake preset build dirs)
+build/
+out/
+.cache/
 
-# Compiled Object files
+# CMake user presets and generated files
+CMakeUserPresets.json
+compile_commands.json
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+*.ninja
+
+# Compiled object files
 *.slo
 *.lo
 *.o
 *.obj
 
-# Precompiled Headers
+# Precompiled headers
 *.gch
 *.pch
 
-# Compiled Dynamic libraries
+# Compiled libraries
 *.so
 *.dylib
 *.dll
-
-# Fortran module files
-*.mod
-*.smod
-
-# Compiled Static libraries
 *.lai
 *.la
 *.a
@@ -30,11 +35,10 @@
 *.exe
 *.out
 *.app
-
-# Build output
-build/
+*.d
 
 # IDE and macOS files
 .idea/
 .vscode/
 .DS_Store
+*.user
