@@ -1,53 +1,43 @@
 #pragma once
 
 #include <memory>
+#include <ostream>
 #include <string>
+#include <utility>
 
 /// Abstract base type for all peep records.
 ///
-/// The Base class encapsulates the common `name` property and provides
-/// the polymorphic interface required by the application. Derived types
-/// must implement both display and clone behavior.
-class Base
-{
-private:
-    /// Owned name string for the record.
-    std::string name;
-
+/// A `Base` owns its name and defines the polymorphic interface every peep
+/// type must implement: how it is displayed, and how it is cloned without
+/// slicing the derived type away.
+class Base {
 public:
-    /// Default construct a Base object with an empty name.
     Base() = default;
 
-    /// Default copy constructor is sufficient because std::string handles
-    /// deep copy semantics correctly.
-    Base(const Base& _other) = default;
+    explicit Base(std::string name) : name_(std::move(name)) {}
 
-    /// Default copy assignment operator preserves the same behavior.
-    Base& operator=(const Base& _other) = default;
+    Base(const Base&) = default;
+    Base& operator=(const Base&) = default;
+    Base(Base&&) noexcept = default;
+    Base& operator=(Base&&) noexcept = default;
 
-    /// Virtual destructor ensures derived objects are destroyed properly
-    /// through a Base pointer.
+    /// Virtual destructor so derived objects are destroyed correctly
+    /// through a `Base` pointer.
     virtual ~Base() = default;
 
-    /// Set the display name for this record.
-    ///
-    /// Using std::string here keeps ownership simple and avoids
-    /// manual memory management.
-    void SetName(const std::string& name);
+    void SetName(std::string name) { name_ = std::move(name); }
 
-    /// Retrieve the stored name.
-    ///
-    /// Returning a const reference avoids an extra string copy while
-    /// preserving immutability for the caller.
-    const std::string& GetName() const noexcept;
+    const std::string& GetName() const noexcept { return name_; }
 
-    /// Display the record contents.
-    ///
-    /// Derived classes must implement how their own fields are shown.
-    virtual void DisplayRecord() const = 0;
+    /// Write this record to `out`. Taking the stream as a parameter (instead
+    /// of writing straight to `std::cout`) is what makes the classes
+    /// testable: tests can pass a `std::ostringstream` and inspect it.
+    virtual void DisplayRecord(std::ostream& out) const = 0;
 
-    /// Clone this object polymorphically.
-    ///
-    /// Derived classes must return a new heap-allocated copy of themselves.
-    virtual std::unique_ptr<Base> clone() const = 0;
+    /// Return a new heap-allocated copy of this object, preserving its
+    /// concrete derived type.
+    virtual std::unique_ptr<Base> Clone() const = 0;
+
+private:
+    std::string name_;
 };

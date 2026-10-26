@@ -1,26 +1,17 @@
 #include "App.h"
+
 #include "InputUtils.h"
-#include "Teacher.h"
 #include "Student.h"
-#include <iostream>
+#include "Teacher.h"
 
-using namespace InputUtils;
-
-/// Run the application loop until the user chooses Exit.
-///
-/// This method drives the main menu, dispatches actions, and pauses at the end
-/// so the console output remains visible on exit.
-void App::Run()
-{
-    Choice choice;
-
-    do
-    {
+void App::Run() {
+    while (true) {
         ShowMenu();
-        choice = GetMenuChoice();
-
-        switch (choice)
-        {
+        const std::optional<Choice> choice = GetMenuChoice();
+        if (!choice.has_value() || *choice == Choice::Exit) {
+            break;
+        }
+        switch (*choice) {
             case Choice::Add:
                 AddRecord();
                 break;
@@ -30,126 +21,94 @@ void App::Run()
             case Choice::Clone:
                 DuplicateRecord();
                 break;
-            default:
+            case Choice::Exit:
                 break;
         }
-    } while (choice != Choice::Exit);
-
-    std::cout << std::endl;
-    std::cin.get();
+    }
 }
 
-/// Print the full application menu.
-///
-/// This keeps the title and available actions together for clearer output
-/// and simplifies the input prompt flow.
-void App::ShowMenu() const
-{
-    std::cout
-        << "------------------------Peeps-OOP-Demo------------------------\n"
-        << "\t1) Add a peep\n"
-        << "\t2) Display all peeps\n"
-        << "\t3) Clone a peep\n"
-        << "\t4) Exit\n";
+void App::ShowMenu() const {
+    out_ << "------------------------Peeps-OOP-Demo------------------------\n"
+         << "\t1) Add a peep\n"
+         << "\t2) Display all peeps\n"
+         << "\t3) Clone a peep\n"
+         << "\t4) Exit\n";
 }
 
-/// Query the user for a menu selection and validate the result.
-///
-/// A narrow prompt encourages the menu display to remain separate from the
-/// selection logic.
-App::Choice App::GetMenuChoice() const
-{
-    const char prompt[] = "\n\tSelection: ";
-    return static_cast<Choice>(GetValidatedInt(prompt, 1, 4));
+std::optional<App::Choice> App::GetMenuChoice() const {
+    const std::optional<int> value =
+        InputUtils::GetValidatedInt(in_, out_, "\n\tSelection: ", 1, 4);
+    if (!value.has_value()) {
+        return std::nullopt;
+    }
+    return static_cast<Choice>(*value);
 }
 
-/// Prompt the user for a name and return the entered value.
-///
-/// The method currently performs a second read if the first input is empty,
-/// but it should ideally enforce non-empty input explicitly.
-std::string App::PromptName() const
-{
-    std::string name;
-    do
-    {
-        std::cout << "------------------------Name?------------------------\n\t\tName:  ";
-        std::getline(std::cin, name);
-        if (name.empty())
-        {
-            std::cout << "\tName cannot be empty. Please enter a valid name.\n";
+std::optional<std::string> App::PromptName() const {
+    return InputUtils::GetNonEmptyLine(
+        in_, out_, "------------------------Name?------------------------\n\t\tName:  ");
+}
+
+void App::AddRecord() {
+    out_ << "------------------------What kind of peep?------------------------\n";
+    const std::optional<int> type = InputUtils::GetValidatedInt(
+        in_, out_, "\n\t\t1) Teacher\n\t\t2) Student\n\n\tSelection: ", 1, 2);
+    if (!type.has_value()) {
+        return;
+    }
+    const std::optional<std::string> name = PromptName();
+    if (!name.has_value()) {
+        return;
+    }
+
+    if (*type == 1) {
+        const std::optional<int> salary = InputUtils::GetValidatedInt(
+            in_, out_, "\n------------------------Salary?------------------------\n\t\tSalary:  ", 0, 1000000);
+        if (!salary.has_value()) {
+            return;
         }
-    } while (name.empty());
-
-    return name;
-}
-
-/// Create a new record of the selected type and store it in the peeps list.
-///
-/// The method uses polymorphic object creation and preserves ownership via
-/// std::unique_ptr<Base>.
-void App::AddRecord()
-{
-    std::cout << "------------------------What kind of peep?------------------------\n";
-    const char menu[] = "\n\t\t1) Teacher\n\t\t2) Student\n\n\tSelection: ";
-    int mainMenuChoice = GetValidatedInt(menu, 1, 2);
-
-    const std::string name = PromptName();
-
-    if (mainMenuChoice == 1)
-    {
         auto teacher = std::make_unique<Teacher>();
-        teacher->SetName(name);
-        int salary = GetValidatedInt("\n------------------------Salary?------------------------\n\t\tSalary:  ", 0, 1000000);
-        teacher->SetSalary(salary);
-        peeps.push_back(std::move(teacher));
-    }
-    else
-    {
+        teacher->SetName(*name);
+        teacher->SetSalary(*salary);
+        peeps_.push_back(std::move(teacher));
+    } else {
+        const std::optional<float> gpa = InputUtils::GetValidatedFloat(
+            in_, out_, "\n------------------------GPA?------------------------\n\t\tGPA:  ", 0.0F, 4.0F);
+        if (!gpa.has_value()) {
+            return;
+        }
         auto student = std::make_unique<Student>();
-        student->SetName(name);
-        const float gpa = GetValidatedFloat("\n------------------------GPA?------------------------\n\t\tGPA:  ", 0.0f, 4.0f);
-        student->SetGPA(gpa);
-        peeps.push_back(std::move(student));
+        student->SetName(*name);
+        student->SetGPA(*gpa);
+        peeps_.push_back(std::move(student));
     }
 }
 
-/// Display all stored records or inform the user if the list is empty.
-///
-/// This method iterates over the polymorphic vector and invokes each object's
-/// DisplayRecord implementation.
-void App::DisplayRecords() const
-{
-    std::cout << "------------------------Display Records------------------------\n";
-
-    if (peeps.empty())
-    {
-        std::cout << "No records found. Add a peep first!\n\n";
+void App::DisplayRecords() const {
+    out_ << "------------------------Display Records------------------------\n";
+    if (peeps_.empty()) {
+        out_ << "No records found. Add a peep first!\n\n";
         return;
     }
-
-    for (const auto& record : peeps)
-    {
-        std::cout << "\n\t\t";
-        record->DisplayRecord();
+    for (std::size_t i = 0; i < peeps_.size(); ++i) {
+        out_ << "\n\t\t" << (i + 1) << ". ";
+        peeps_[i]->DisplayRecord(out_);
     }
-
-    std::cout << "\n";
+    out_ << '\n';
 }
 
-/// Clone a selected record by index and append the copy to the list.
-///
-/// The method validates the choice via GetValidatedInt and uses the virtual
-/// clone interface to preserve the runtime type.
-void App::DuplicateRecord()
-{
-    if (peeps.empty())
-    {
-        std::cout << "Sorry NO peeps FOUND!!!  Add PEEPS!\n";
+void App::DuplicateRecord() {
+    if (peeps_.empty()) {
+        out_ << "No peeps found. Add a peep first!\n";
         return;
     }
-
-    std::cout << "------------------------Clone Zone------------------------\n\t\t";
-    std::cout << "There are " << peeps.size() << " peeps in the records, choose one to clone.\n\t\t";
-    int choice = GetValidatedInt("Peep number: ", 1, static_cast<int>(peeps.size()));
-    peeps.push_back(peeps[choice - 1]->clone());
+    out_ << "------------------------Clone a peep------------------------\n\t\t";
+    out_ << "There are " << peeps_.size() << " peeps in the records, choose one to clone.\n\t\t";
+    const std::optional<int> choice = InputUtils::GetValidatedInt(
+        in_, out_, "Peep number: ", 1, static_cast<int>(peeps_.size()));
+    if (!choice.has_value()) {
+        return;
+    }
+    peeps_.push_back(peeps_[static_cast<std::size_t>(*choice) - 1]->Clone());
+    out_ << "Cloned peep " << *choice << ".\n";
 }

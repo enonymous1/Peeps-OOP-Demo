@@ -1,50 +1,33 @@
-// The header guard prevents the header file from being included more than once.
 #pragma once
+
+#include <memory>
+#include <ostream>
+#include <string>
 
 #include "Base.h"
 
-/// Student is a concrete Base-derived record type representing a student.
-///
-/// This class stores a GPA and implements the required Base interface for
-/// display and cloning. The polymorphic `clone()` method enables copying
-/// records through Base pointers without slicing.
-class Student : public Base
-{
-private:
-    /// The student's GPA.
-    float gpa = 0;
-
+/// A concrete peep type representing a student, storing a GPA.
+class Student : public Base {
 public:
-    /// Default constructor initializes a student with a zero GPA.
-    Student();
+    Student() = default;
 
-    /// Copy constructor performs a field-wise copy of the student.
-    ///
-    /// The default copy behavior is sufficient because Base and float already
-    /// manage their own memory and value semantics.
-    Student(const Student& _other);
+    Student(std::string name, float gpa);
 
-    /// Copy assignment operator performs a field-wise assignment.
-    ///
-    /// This keeps assignment semantics consistent with the copy constructor,
-    /// while allowing derived-type state to be reused.
-    Student& operator=(const Student& _other);
-
-    /// Default virtual destructor ensures correct cleanup through Base pointers.
+    Student(const Student&) = default;
+    Student& operator=(const Student&) = default;
+    Student(Student&&) noexcept = default;
+    Student& operator=(Student&&) noexcept = default;
     ~Student() override = default;
 
-    /// Set the GPA for this student record.
-    ///
-    /// The caller is responsible for any validation of the GPA range.
-    void SetGPA(float _gpa);
+    /// Set the GPA. Throws `std::out_of_range` outside [0.0, 4.0], so the
+    /// invariant lives in the class instead of only in the input layer.
+    void SetGPA(float gpa);
 
-    /// Display this student's record.
-    ///
-    /// Implements the Base contract by printing the stored name and GPA.
-    void DisplayRecord() const override;
+    float GetGPA() const noexcept { return gpa_; }
 
-    /// Clone this object polymorphically.
-    ///
-    /// Returns a new unique_ptr containing a copy of this Student.
-    std::unique_ptr<Base> clone() const override;
+    void DisplayRecord(std::ostream& out) const override;
+    std::unique_ptr<Base> Clone() const override;
+
+private:
+    float gpa_ = 0.0F;
 };

@@ -1,63 +1,39 @@
 #pragma once
 
+#include <istream>
 #include <memory>
+#include <optional>
+#include <ostream>
 #include <string>
 #include <vector>
+
 #include "Base.h"
 
-/// The application controller for the Peeps-OOP-Demo program.
+/// The application controller for Peeps-OOP-Demo.
 ///
-/// This class owns the primary records container and exposes the
-/// top-level menu-driven workflow. It manages user choices, record
-/// creation, display, and cloning using polymorphic Base-derived objects.
-class App
-{
+/// `App` owns the polymorphic record list and drives the menu loop. It
+/// reads from and writes to the streams it is given, rather than
+/// hard-coding `std::cin` / `std::cout`, so tests can drive it with
+/// `std::istringstream` / `std::ostringstream` and the real program can
+/// pass the console streams (see `main.cpp`).
+class App {
 public:
-    /// Run the main application loop until the user exits.
+    App(std::istream& in, std::ostream& out) : in_(in), out_(out) {}
+
+    /// Run the main loop until the user exits or input ends.
     void Run();
 
 private:
-    /// Main menu choices available to the user.
-    enum class Choice {
-        Add = 1,
-        Display,
-        Clone,
-        Exit
-    };
+    enum class Choice { Add = 1, Display, Clone, Exit };
 
-    /// Container holding the polymorphic peep objects created by the app.
-    std::vector<std::unique_ptr<Base>> peeps;
+    std::istream& in_;
+    std::ostream& out_;
+    std::vector<std::unique_ptr<Base>> peeps_;
 
-    /// Display the main menu prompt.
-    ///
-    /// This only emits the menu to stdout and does not modify application state.
     void ShowMenu() const;
-
-    /// Query the user for the next menu choice.
-    ///
-    /// @returns The selected menu option as a Choice enum.
-    Choice GetMenuChoice() const;
-
-    /// Add a new record to the application state.
-    ///
-    /// The new record is created as either a Teacher or Student object,
-    /// configured via user input, and stored in the `peeps` vector.
+    std::optional<Choice> GetMenuChoice() const;
     void AddRecord();
-
-    /// Display all stored records on the console.
-    ///
-    /// This method iterates over the polymorphic collection and calls
-    /// each object's display method.
     void DisplayRecords() const;
-
-    /// Duplicate an existing record by cloning the selected entry.
-    ///
-    /// This uses the virtual clone() interface exposed by Base.
     void DuplicateRecord();
-
-    /// Prompt the user for a name and return the entered value.
-    ///
-    /// This helper centralizes name acquisition and can handle
-    /// transient input state concerns at the presentation layer.
-    std::string PromptName() const;
+    std::optional<std::string> PromptName() const;
 };

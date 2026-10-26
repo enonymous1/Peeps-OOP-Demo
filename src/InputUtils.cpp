@@ -1,86 +1,73 @@
 #include "InputUtils.h"
-#include <iostream>
-#include <climits>
+
+#include <sstream>
 
 namespace InputUtils {
+namespace {
 
-/// Clear any pending input from stdin.
-///
-/// This helper resets the stream error state and discards characters until
-/// the next newline. It is used after a failed extraction to ensure the next
-/// read starts from a clean buffer.
-void ClearBuffer() noexcept
-{
-    std::cin.clear();
-    std::cin.ignore(INT_MAX, '\n');
-}
+// Read one line. Returns false on end-of-input, so callers can stop
+// instead of retrying forever (the old behaviour on Ctrl-D / piped EOF).
+bool ReadLine(std::istream& in, std::string& line) { return static_cast<bool>(std::getline(in, line)); }
 
-/// Prompt the user for an integer and validate the result.
-///
-/// The function prints `strMessage` and reads an integer from stdin. If the
-/// extraction fails, the buffer is cleared and the user is prompted again.
-/// If a range is provided, the integer must fall within [nMinimumRange,
-/// nMaximumRange].
-///
-/// @param strMessage The prompt text to display before reading input.
-/// @param nMinimumRange The minimum allowed value (inclusive).
-/// @param nMaximumRange The maximum allowed value (inclusive).
-/// @returns A validated integer from the user.
-int GetValidatedInt(std::string_view strMessage, int nMinimumRange, int nMaximumRange)
-{
-    int x;
-
-    while (true)
-    {
-        std::cout << strMessage;
-        std::cin >> x;
-
-        while (std::cin.fail())
-        {
-            ClearBuffer();
-            std::cout << "\n\tError, invalid input please try again:  ";
-            std::cin >> x;
+template <typename T>
+std::optional<T> ReadValidated(std::istream& in, std::ostream& out, std::string_view prompt,
+                               std::optional<T> minimum, std::optional<T> maximum) {
+    std::string line;
+    while (true) {
+        out << prompt << std::flush;
+        if (!ReadLine(in, line)) {
+            return std::nullopt;
         }
 
-        // Flush any leftover characters from the line after a successful read.
-        ClearBuffer();
-
-        // If both range bounds are zero, treat it as “no range specified.”
-        if ((nMaximumRange == 0 && nMinimumRange == 0) || (x >= nMinimumRange && x <= nMaximumRange))
-        {
-            return x;
+        std::istringstream parsed(line);
+        T value{};
+        if (!(parsed >> value)) {
+            out << "\n\tError, invalid input please try again.\n";
+            continue;
         }
-
-        std::cout << "\n\tYour input was out of range, lets ride this ride again =)\n\n";
+        // The whole line must be one value: no trailing junk.
+        // Note: extracting whitespace at end-of-line sets failbit too, so
+        // only eof() is checked here, not fail().
+        parsed >> std::ws;
+        if (!parsed.eof()) {
+            out << "\n\tError, invalid input please try again.\n";
+            continue;
+        }
+        if ((minimum.has_value() && value < *minimum) ||
+            (maximum.has_value() && value > *maximum)) {
+            out << "\n\tYour input was out of range, please try again.\n";
+            continue;
+        }
+        return value;
     }
 }
 
-float GetValidatedFloat(std::string_view strMessage, float nMinimumRange, float nMaximumRange)
-{
-    float x;
+}  // namespace
 
-    while (true)
-    {
-        std::cout << strMessage;
-        std::cin >> x;
+std::optional<int> GetValidatedInt(std::istream& in, std::ostream& out, std::string_view prompt,
+                                   std::optional<int> minimum, std::optional<int> maximum) {
+    return ReadValidated<int>(in, out, prompt, minimum, maximum);
+}
 
-        while (std::cin.fail())
-        {
-            ClearBuffer();
-            std::cout << "\n\tError, invalid input please try again:  ";
-            std::cin >> x;
+std::optional<float> GetValidatedFloat(std::istream& in, std::ostream& out, std::string_view prompt,
+                                       std::optional<float> minimum, std::optional<float> maximum) {
+    return ReadValidated<float>(in, out, prompt, minimum, maximum);
+}
+
+std::optional<std::string> GetNonEmptyLine(std::istream& in, std::ostream& out,
+                                           std::string_view prompt) {
+    std::string line;
+    while (true) {
+        out << prompt << std::flush;
+        if (!ReadLine(in, line)) {
+            return std::nullopt;
         }
-
-        ClearBuffer();
-
-        if ((nMaximumRange == 0.0f && nMinimumRange == 0.0f) ||
-            (x >= nMinimumRange && x <= nMaximumRange))
-        {
-            return x;
+        if (line.empty()) {
+            out << "\tName cannot be empty. Please enter a valid name.\n";
+            continue;
         }
-
-        std::cout << "\n\tYour input was out of range, lets ride this ride again =)\n\n";
+        return line;
     }
 }
 
-} // namespace InputUtils
+}  // namespace InputUtils
