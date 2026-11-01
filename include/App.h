@@ -21,6 +21,12 @@ public:
     App(std::istream& in, std::ostream& out) : in_(in), out_(out) {}
 
     /// Run the main loop until the user exits or input ends.
+    ///
+    /// Note on const below: a const method here means "does not modify
+    /// peeps_", not "touches no I/O" — the input and output streams are
+    /// external state held by reference, so reading/writing them from a
+    /// const method is not a contradiction, just a convention to read
+    /// this way.
     void Run();
 
 private:

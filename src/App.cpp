@@ -1,8 +1,22 @@
 #include "App.h"
 
+#include <string_view>
+
 #include "InputUtils.h"
 #include "Student.h"
 #include "Teacher.h"
+
+namespace {
+
+// Every banner is the same 24-dash rule on each side of the title.
+// One helper keeps them identical and stops a future banner edit from
+// drifting one title's width away from the rest.
+void PrintBanner(std::ostream& out, std::string_view title) {
+    constexpr std::string_view kRule = "------------------------";  // 24 dashes
+    out << kRule << title << kRule << '\n';
+}
+
+}  // namespace
 
 void App::Run() {
     while (true) {
@@ -21,15 +35,18 @@ void App::Run() {
             case Choice::Clone:
                 DuplicateRecord();
                 break;
-            case Choice::Exit:
+            default:
+                // Exit is handled by the break above the switch, so
+                // this is unreachable — it exists only to keep the
+                // switch exhaustive and warning-free.
                 break;
         }
     }
 }
 
 void App::ShowMenu() const {
-    out_ << "------------------------Peeps-OOP-Demo------------------------\n"
-         << "\t1) Add a peep\n"
+    PrintBanner(out_, "Peeps-OOP-Demo");
+    out_ << "\t1) Add a peep\n"
          << "\t2) Display all peeps\n"
          << "\t3) Clone a peep\n"
          << "\t4) Exit\n";
@@ -45,12 +62,14 @@ std::optional<App::Choice> App::GetMenuChoice() const {
 }
 
 std::optional<std::string> App::PromptName() const {
-    return InputUtils::GetNonEmptyLine(
-        in_, out_, "------------------------Name?------------------------\n\t\tName:  ");
+    // The banner is printed separately so the prompt itself stays a
+    // plain "Name:  " line; PrintBanner supplies the trailing newline.
+    PrintBanner(out_, "Name?");
+    return InputUtils::GetNonEmptyLine(in_, out_, "\t\tName:  ");
 }
 
 void App::AddRecord() {
-    out_ << "------------------------What kind of peep?------------------------\n";
+    PrintBanner(out_, "What kind of peep?");
     const std::optional<int> type = InputUtils::GetValidatedInt(
         in_, out_, "\n\t\t1) Teacher\n\t\t2) Student\n\n\tSelection: ", 1, 2);
     if (!type.has_value()) {
@@ -62,9 +81,10 @@ void App::AddRecord() {
     }
 
     if (*type == 1) {
+        out_ << '\n';
+        PrintBanner(out_, "Salary?");
         const std::optional<int> salary = InputUtils::GetValidatedInt(
-            in_, out_, "\n------------------------Salary?------------------------\n\t\tSalary:  ",
-            Teacher::kMinSalary, Teacher::kMaxSalary);
+            in_, out_, "\t\tSalary:  ", Teacher::kMinSalary, Teacher::kMaxSalary);
         if (!salary.has_value()) {
             return;
         }
@@ -73,9 +93,10 @@ void App::AddRecord() {
         teacher->SetSalary(*salary);
         peeps_.push_back(std::move(teacher));
     } else {
+        out_ << '\n';
+        PrintBanner(out_, "GPA?");
         const std::optional<float> gpa = InputUtils::GetValidatedFloat(
-            in_, out_, "\n------------------------GPA?------------------------\n\t\tGPA:  ",
-            Student::kMinGpa, Student::kMaxGpa);
+            in_, out_, "\t\tGPA:  ", Student::kMinGpa, Student::kMaxGpa);
         if (!gpa.has_value()) {
             return;
         }
@@ -87,7 +108,7 @@ void App::AddRecord() {
 }
 
 void App::DisplayRecords() const {
-    out_ << "------------------------Display Records------------------------\n";
+    PrintBanner(out_, "Display Records");
     if (peeps_.empty()) {
         out_ << "No records found. Add a peep first!\n\n";
         return;
@@ -104,7 +125,8 @@ void App::DuplicateRecord() {
         out_ << "No peeps found. Add a peep first!\n";
         return;
     }
-    out_ << "------------------------Clone a peep------------------------\n\t\t";
+    PrintBanner(out_, "Clone a peep");
+    out_ << "\t\t";
     out_ << "There are " << peeps_.size() << " peeps in the records, choose one to clone.\n\t\t";
     const std::optional<int> choice = InputUtils::GetValidatedInt(
         in_, out_, "Peep number: ", 1, static_cast<int>(peeps_.size()));
