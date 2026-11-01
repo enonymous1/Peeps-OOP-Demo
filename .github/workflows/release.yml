@@ -1,0 +1,153 @@
+name: Release
+
+# Cutting a release is pushing a tag, AFTER pushing main:
+#   git push origin main
+#   git tag v2.1.0
+#   git push origin v2.1.0
+# The tag must be pushed after main, because the workflow has to be in
+# the tagged commit to run at all. The tag must match the VERSION in
+# CMakeLists.txt (a '-' suffix is allowed for pre-releases, e.g.
+# v2.2.0-rc1 against VERSION 2.2.0); the check-tag step enforces this.
+#
+# Tag pushes do not trigger CI (it runs on pushes to main and pull
+# requests), so this workflow runs the test suite itself before
+# publishing anything. A failed test or a failed platform build blocks
+# the release: the release job needs every build job.
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check tag matches CMake version
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          python3 - <<'PY'
+          import os
+          import re
+          import sys
+
+          tag = os.environ["TAG"].removeprefix("v").split("-")[0]
+          text = open("CMakeLists.txt", encoding="utf-8").read()
+          match = re.search(r"project\(Peeps_OOP_Demo VERSION ([0-9.]+)", text)
+          if match is None:
+              print("CMakeLists.txt has no project VERSION", file=sys.stderr)
+              sys.exit(1)
+          if match.group(1) != tag:
+              print(f"Tag {os.environ['TAG']} does not match CMake VERSION {match.group(1)}",
+                    file=sys.stderr)
+              sys.exit(1)
+          print(f"Tag {os.environ['TAG']} matches CMake VERSION {tag}")
+          PY
+
+      - name: Configure
+        run: cmake --preset release
+
+      - name: Build
+        run: cmake --build --preset release
+
+      - name: Test
+        run: ctest --preset test
+
+  build:
+    name: Package (${{ matrix.rid }})
+    needs: test
+    strategy:
+      # One platform failing must not cancel the others, so the
+      # failure is visible per platform instead of hidden.
+      fail-fast: false
+      matrix:
+        include:
+          - rid: linux-x64
+            os: ubuntu-latest
+          - rid: windows-x64
+            os: windows-latest
+          - rid: macos-arm64
+            os: macos-latest
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure
+        run: cmake --preset release
+
+      - name: Build
+        run: cmake --build --preset release
+
+      - name: Test
+        run: ctest --preset test
+
+      # Install, then stage from the install tree: this is generator-
+      # agnostic, unlike hardcoding out/build/release/Release/
+      # Peeps_OOP_Demo.exe on Windows (single-config generators put
+      # the binary directly under out/build/release/). Each staged
+      # directory holds only the binary and the LICENSE, so each
+      # release zip has them at its root.
+      - name: Install
+        run: cmake --install out/build/release --config Release --prefix install
+
+      - name: Stage binary
+        shell: bash
+        run: |
+          cmake -E make_directory "publish/${{ matrix.rid }}"
+          if [ -f install/bin/Peeps_OOP_Demo.exe ]; then
+            cmake -E copy install/bin/Peeps_OOP_Demo.exe "publish/${{ matrix.rid }}/"
+          elif [ -f install/bin/Peeps_OOP_Demo ]; then
+            cmake -E copy install/bin/Peeps_OOP_Demo "publish/${{ matrix.rid }}/"
+          else
+            echo "No installed binary found under install/bin" >&2
+            exit 1
+          fi
+          cmake -E copy LICENSE "publish/${{ matrix.rid }}/"
+          ls "publish/${{ matrix.rid }}"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: peeps-oop-demo-${{ matrix.rid }}
+          path: publish/${{ matrix.rid }}
+
+  release:
+    name: Create release
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: peeps-oop-demo-*
+          path: artifacts
+
+      - name: Zip artifacts and checksum
+        # Zipping happens here, on Ubuntu, so no platform-specific
+        # zip tool is needed in the build jobs. Each zip holds the
+        # staged binary and LICENSE at its root.
+        run: |
+          cd artifacts
+          for dir in peeps-oop-demo-*; do
+            (cd "$dir" && zip -r "../../$dir.zip" .)
+          done
+          cd ..
+          sha256sum ./*.zip > SHA256SUMS.txt
+          ls -l ./*.zip SHA256SUMS.txt
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            ./*.zip
+            SHA256SUMS.txt
+          generate_release_notes: true
+          # Tags with a suffix (v2.2.0-rc1) are pre-releases.
+          prerelease: ${{ contains(github.ref_name, '-') }}

@@ -76,7 +76,19 @@ classDiagram
 
 ## Installation
 
-Build from source with the release preset, then install the binary:
+Download a prebuilt binary from the GitHub Release (starting with
+v2.1.0): pick the zip for your platform (`linux-x64`, `windows-x64`,
+`macos-arm64`), unzip it, and run `Peeps_OOP_Demo`
+(`Peeps_OOP_Demo.exe` on Windows). Each zip holds only the binary and
+the LICENSE, so no toolchain is needed. The binaries are unsigned, so
+Windows may show a SmartScreen warning and macOS may block the first
+run; on macOS, clearing the quarantine flag lets it run:
+
+```sh
+xattr -d com.apple.quarantine Peeps_OOP_Demo
+```
+
+Or build from source with the release preset, then install the binary:
 
 ```sh
 cmake --preset release
@@ -154,15 +166,24 @@ The deployment path is a GitHub Release:
 
 1. Push to `main`. CI builds and tests on Ubuntu, Windows, and macOS.
 2. Tag the release on `main` (for example `v2.1.0`, matching the
-   version in `CMakeLists.txt`).
-3. Create the release from that tag. GitHub auto-generates source
-   archives for download; no binaries are attached.
-4. Users build from source with the Installation commands above.
+   version in `CMakeLists.txt`), then push the tag. Push the tag
+   *after* pushing `main`: the release workflow has to be in the
+   tagged commit to run at all, and tag pushes do not trigger CI, so
+   the release workflow runs the test suite itself.
+3. Pushing the tag triggers `.github/workflows/release.yml`: it
+   checks the tag matches the `CMakeLists.txt` version, builds on
+   Ubuntu, Windows, and macOS, and creates a GitHub Release with one
+   zip per platform (binary + LICENSE) plus `SHA256SUMS.txt`. Tags
+   with a `-` suffix (for example `v2.2.0-rc1`) are pre-releases.
+   Prebuilt binaries start with v2.1.0; earlier releases were
+   source-only.
+4. Users without a toolchain use a prebuilt zip; everyone else can
+   build from source with the Installation commands above.
 
-CI does not package or publish binaries, and there is no package
-registry distribution. If binary releases are ever wanted, a
-`--version` flag and release packaging must be added *before* the
-first binary release, not after.
+There is no package-registry distribution. The release is identified
+by its tag and zip names; there is no `--version` flag yet, and that
+is not a blocker for the binary releases — it remains a future
+addition, not a requirement.
 
 ## Usage
 
