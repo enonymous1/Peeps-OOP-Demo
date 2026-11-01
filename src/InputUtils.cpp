@@ -10,6 +10,11 @@ namespace {
 // instead of retrying forever (the old behaviour on Ctrl-D / piped EOF).
 bool ReadLine(std::istream& in, std::string& line) { return static_cast<bool>(std::getline(in, line)); }
 
+// Why read a whole line instead of `in >> value`? Stream extraction
+// leaves trailing characters (e.g. the "x" in "5x") in the buffer,
+// where the next prompt silently consumes them. Reading a line and
+// requiring the whole line to be one value makes bad input fail
+// loudly, at the prompt where it was typed.
 template <typename T>
 std::optional<T> ReadValidated(std::istream& in, std::ostream& out, std::string_view prompt,
                                std::optional<T> minimum, std::optional<T> maximum) {

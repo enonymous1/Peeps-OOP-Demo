@@ -12,6 +12,8 @@ void Student::SetGPA(float gpa) {
     gpa_ = gpa;
 }
 
+std::string_view Student::TypeName() const { return "Student"; }
+
 void Student::DisplayRecord(std::ostream& out) const {
     out << GetName() << " :: GPA == " << gpa_ << '\n';
 }

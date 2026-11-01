@@ -14,19 +14,23 @@ namespace InputUtils {
 /// next prompt. Returns `std::nullopt` on end-of-input instead of looping
 /// forever, which is what the old helpers did on Ctrl-D / piped EOF.
 /// A missing bound means "no bound": there is no (0, 0) sentinel anymore.
-std::optional<int> GetValidatedInt(std::istream& in, std::ostream& out, std::string_view prompt,
-                                   std::optional<int> minimum = std::nullopt,
-                                   std::optional<int> maximum = std::nullopt);
+/// [[nodiscard]] on all three: ignoring a validated value — or a
+/// nullopt signalling end-of-input — is almost always a bug.
+[[nodiscard]] std::optional<int> GetValidatedInt(std::istream& in, std::ostream& out,
+                                                 std::string_view prompt,
+                                                 std::optional<int> minimum = std::nullopt,
+                                                 std::optional<int> maximum = std::nullopt);
 
 /// Prompt for a floating-point value and validate it. Same EOF contract
 /// as `GetValidatedInt`.
-std::optional<float> GetValidatedFloat(std::istream& in, std::ostream& out, std::string_view prompt,
-                                       std::optional<float> minimum = std::nullopt,
-                                       std::optional<float> maximum = std::nullopt);
+[[nodiscard]] std::optional<float> GetValidatedFloat(std::istream& in, std::ostream& out,
+                                                     std::string_view prompt,
+                                                     std::optional<float> minimum = std::nullopt,
+                                                     std::optional<float> maximum = std::nullopt);
 
 /// Prompt for a line of text, rejecting empty lines. Returns
 /// `std::nullopt` on end-of-input.
-std::optional<std::string> GetNonEmptyLine(std::istream& in, std::ostream& out,
-                                           std::string_view prompt);
+[[nodiscard]] std::optional<std::string> GetNonEmptyLine(std::istream& in, std::ostream& out,
+                                                         std::string_view prompt);
 
 }  // namespace InputUtils

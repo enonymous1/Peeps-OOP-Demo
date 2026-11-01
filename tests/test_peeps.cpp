@@ -12,6 +12,7 @@
 
 #include "App.h"
 #include "InputUtils.h"
+#include "PeepFactory.h"
 #include "Student.h"
 #include "Teacher.h"
 
@@ -52,7 +53,9 @@ bool Contains(const std::string& haystack, const std::string& needle) {
 
 void TestClonePreservesTypeAndFields() {
     Teacher teacher("Ada", 50000);
+    CHECK(teacher.TypeName() == "Teacher");
     const std::unique_ptr<Base> clone = teacher.Clone();
+    CHECK(clone->TypeName() == "Teacher");
     const auto* cloned_teacher = dynamic_cast<Teacher*>(clone.get());
     CHECK(cloned_teacher != nullptr);
     CHECK(clone->GetName() == "Ada");
@@ -61,7 +64,9 @@ void TestClonePreservesTypeAndFields() {
     }
 
     Student student("Ben", 3.5F);
+    CHECK(student.TypeName() == "Student");
     const std::unique_ptr<Base> student_clone = student.Clone();
+    CHECK(student_clone->TypeName() == "Student");
     const auto* cloned_student = dynamic_cast<Student*>(student_clone.get());
     CHECK(cloned_student != nullptr);
     if (cloned_student != nullptr) {
@@ -189,6 +194,24 @@ void TestAppInvalidMenuThenValid() {
     CHECK(Contains(out.str(), "out of range"));
 }
 
+void TestFactoryCreatesTypes() {
+    // The factory is the extension point: a new type must be
+    // creatable through the registry without touching App.
+    const std::vector<PeepKind> kinds = AllPeepKinds();
+    CHECK(kinds.size() == 2);
+    CHECK(kinds[0].label == "Teacher");
+    CHECK(kinds[1].label == "Student");
+    std::istringstream in("50000\n");
+    std::ostringstream out;
+    const std::unique_ptr<Base> peep = kinds[0].create("Ada", in, out);
+    CHECK(peep != nullptr);
+    CHECK(peep->TypeName() == "Teacher");
+    CHECK(peep->GetName() == "Ada");
+    std::istringstream eof_in("");
+    std::ostringstream eof_out;
+    CHECK(kinds[0].create("Ada", eof_in, eof_out) == nullptr);
+}
+
 void TestAppSmoke() {
     // Add a teacher, display, clone, display again, exit.
     std::istringstream in("1\n1\nAda\n50000\n2\n3\n1\n2\n4\n");
@@ -223,6 +246,7 @@ int main() {
         {"ValidatedFloat", TestValidatedFloat},
         {"ValidatedFloatRejectsNonFinite", TestValidatedFloatRejectsNonFinite},
         {"NonEmptyLine", TestNonEmptyLine},
+        {"FactoryCreatesTypes", TestFactoryCreatesTypes},
         {"AppSmoke", TestAppSmoke},
         {"AppStudentSmoke", TestAppStudentSmoke},
         {"AppEmptyDisplayAndClone", TestAppEmptyDisplayAndClone},

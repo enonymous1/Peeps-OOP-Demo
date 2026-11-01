@@ -3,6 +3,7 @@
 #include <memory>
 #include <ostream>
 #include <string>
+#include <string_view>
 
 #include "Base.h"
 
@@ -32,6 +33,7 @@ public:
 
     float GetGPA() const noexcept { return gpa_; }
 
+    std::string_view TypeName() const override;
     void DisplayRecord(std::ostream& out) const override;
     std::unique_ptr<Base> Clone() const override;
 

@@ -3,6 +3,7 @@
 #include <memory>
 #include <ostream>
 #include <string>
+#include <string_view>
 
 #include "Base.h"
 
@@ -31,6 +32,7 @@ public:
 
     int GetSalary() const noexcept { return salary_; }
 
+    std::string_view TypeName() const override;
     void DisplayRecord(std::ostream& out) const override;
     std::unique_ptr<Base> Clone() const override;
 

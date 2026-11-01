@@ -12,6 +12,8 @@ void Teacher::SetSalary(int salary) {
     salary_ = salary;
 }
 
+std::string_view Teacher::TypeName() const { return "Teacher"; }
+
 void Teacher::DisplayRecord(std::ostream& out) const {
     out << GetName() << " :: Salary == " << salary_ << '\n';
 }

@@ -18,6 +18,7 @@ endfunction()
 add_library(peeps_core
     src/App.cpp
     src/InputUtils.cpp
+    src/PeepFactory.cpp
     src/Student.cpp
     src/Teacher.cpp
 )
