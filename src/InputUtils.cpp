@@ -1,5 +1,6 @@
 #include "InputUtils.h"
 
+#include <cmath>
 #include <sstream>
 
 namespace InputUtils {
@@ -33,6 +34,16 @@ std::optional<T> ReadValidated(std::istream& in, std::ostream& out, std::string_
             out << "\n\tError, invalid input please try again.\n";
             continue;
         }
+        // Portability guard, not a workaround for this platform: on
+        // GCC/libstdc++ "nan"/"inf" are already rejected above, but on
+        // an implementation that parses NaN, the range check below
+        // would pass it (every comparison with NaN is false). Reject
+        // non-finite values explicitly so behaviour does not depend
+        // on the standard library implementation.
+        if (!std::isfinite(value)) {
+            out << "\n\tError, invalid input please try again.\n";
+            continue;
+        }
         if ((minimum.has_value() && value < *minimum) ||
             (maximum.has_value() && value > *maximum)) {
             out << "\n\tYour input was out of range, please try again.\n";
@@ -62,11 +73,16 @@ std::optional<std::string> GetNonEmptyLine(std::istream& in, std::ostream& out,
         if (!ReadLine(in, line)) {
             return std::nullopt;
         }
-        if (line.empty()) {
+        // A whitespace-only line is not a name: trim it, and reject
+        // the line if nothing is left. Trimming also stops leading /
+        // trailing spaces from being stored verbatim in the record.
+        const std::size_t first = line.find_first_not_of(" \t\r\n");
+        const std::size_t last = line.find_last_not_of(" \t\r\n");
+        if (first == std::string::npos) {
             out << "\tName cannot be empty. Please enter a valid name.\n";
             continue;
         }
-        return line;
+        return line.substr(first, last - first + 1);
     }
 }
 

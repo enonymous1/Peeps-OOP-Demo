@@ -1,14 +1,13 @@
 #include "Teacher.h"
 
-#include <iostream>
 #include <stdexcept>
 #include <utility>
 
 Teacher::Teacher(std::string name, int salary) : Base(std::move(name)) { SetSalary(salary); }
 
 void Teacher::SetSalary(int salary) {
-    if (salary < 0) {
-        throw std::out_of_range("Salary cannot be negative");
+    if (salary < kMinSalary || salary > kMaxSalary) {
+        throw std::out_of_range("Salary must be between 0 and 1000000");
     }
     salary_ = salary;
 }

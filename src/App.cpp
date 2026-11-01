@@ -63,7 +63,8 @@ void App::AddRecord() {
 
     if (*type == 1) {
         const std::optional<int> salary = InputUtils::GetValidatedInt(
-            in_, out_, "\n------------------------Salary?------------------------\n\t\tSalary:  ", 0, 1000000);
+            in_, out_, "\n------------------------Salary?------------------------\n\t\tSalary:  ",
+            Teacher::kMinSalary, Teacher::kMaxSalary);
         if (!salary.has_value()) {
             return;
         }
@@ -73,7 +74,8 @@ void App::AddRecord() {
         peeps_.push_back(std::move(teacher));
     } else {
         const std::optional<float> gpa = InputUtils::GetValidatedFloat(
-            in_, out_, "\n------------------------GPA?------------------------\n\t\tGPA:  ", 0.0F, 4.0F);
+            in_, out_, "\n------------------------GPA?------------------------\n\t\tGPA:  ",
+            Student::kMinGpa, Student::kMaxGpa);
         if (!gpa.has_value()) {
             return;
         }

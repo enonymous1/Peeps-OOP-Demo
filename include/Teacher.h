@@ -9,6 +9,13 @@
 /// A concrete peep type representing a teacher, storing a salary.
 class Teacher : public Base {
 public:
+    // Salary bounds are the single source of truth for this type: App
+    // reads these constants instead of inventing its own range, so the
+    // UI and the setter can never disagree again. The 1,000,000 cap is
+    // an arbitrary demo cap, not a business rule.
+    static constexpr int kMinSalary = 0;
+    static constexpr int kMaxSalary = 1'000'000;
+
     Teacher() = default;
 
     Teacher(std::string name, int salary);

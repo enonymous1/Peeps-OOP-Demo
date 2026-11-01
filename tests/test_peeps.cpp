@@ -8,6 +8,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <utility>
 
 #include "App.h"
 #include "InputUtils.h"
@@ -85,8 +86,11 @@ void TestSetterInvariants() {
 
     Teacher teacher;
     CHECK_THROWS_OUT_OF_RANGE(teacher.SetSalary(-1));
+    CHECK_THROWS_OUT_OF_RANGE(teacher.SetSalary(Teacher::kMaxSalary + 1));
     teacher.SetSalary(0);
     CHECK(teacher.GetSalary() == 0);
+    teacher.SetSalary(Teacher::kMaxSalary);
+    CHECK(teacher.GetSalary() == Teacher::kMaxSalary);
 }
 
 void TestValidatedInt() {
@@ -136,9 +140,53 @@ void TestNonEmptyLine() {
     const auto value = InputUtils::GetNonEmptyLine(in, out, "Name: ");
     CHECK(value.has_value() && *value == "Bob");
 
+    {
+        // Whitespace-only is not a name, and surrounding spaces are trimmed.
+        std::istringstream ws_in("   \n  Bob  \n");
+        std::ostringstream ws_out;
+        const auto ws_value = InputUtils::GetNonEmptyLine(ws_in, ws_out, "Name: ");
+        CHECK(ws_value.has_value() && *ws_value == "Bob");
+    }
+
     std::istringstream empty("");
     std::ostringstream empty_out;
     CHECK(!InputUtils::GetNonEmptyLine(empty, empty_out, "Name: ").has_value());
+}
+
+void TestValidatedFloatRejectsNonFinite() {
+    // "nan" must never become a GPA, on any standard library: it is
+    // rejected and the next valid value is used.
+    std::istringstream in("nan\n3.5\n");
+    std::ostringstream out;
+    const auto value = InputUtils::GetValidatedFloat(in, out, "GPA: ", 0.0F, 4.0F);
+    CHECK(value.has_value() && *value == 3.5F);
+}
+
+void TestAppStudentSmoke() {
+    // Add a student, display, exit. The teacher path alone is not
+    // enough coverage for AddRecord's second branch.
+    std::istringstream in("1\n2\nBen\n3.5\n2\n4\n");
+    std::ostringstream out;
+    App app(in, out);
+    app.Run();
+    CHECK(Contains(out.str(), "1. Ben :: GPA == 3.5"));
+}
+
+void TestAppEmptyDisplayAndClone() {
+    std::istringstream in("2\n3\n4\n");
+    std::ostringstream out;
+    App app(in, out);
+    app.Run();
+    CHECK(Contains(out.str(), "No records found."));
+    CHECK(Contains(out.str(), "No peeps found."));
+}
+
+void TestAppInvalidMenuThenValid() {
+    std::istringstream in("9\n4\n");
+    std::ostringstream out;
+    App app(in, out);
+    app.Run();
+    CHECK(Contains(out.str(), "out of range"));
 }
 
 void TestAppSmoke() {
@@ -164,14 +212,39 @@ void TestAppExitsCleanlyOnEof() {
 }  // namespace
 
 int main() {
-    TestClonePreservesTypeAndFields();
-    TestCloneIsIndependent();
-    TestSetterInvariants();
-    TestValidatedInt();
-    TestValidatedFloat();
-    TestNonEmptyLine();
-    TestAppSmoke();
-    TestAppExitsCleanlyOnEof();
+    // One entry per test, run in isolation: a test that throws
+    // unexpectedly is counted as a failure instead of aborting the
+    // whole binary with no summary, and the output names the test.
+    const std::pair<const char*, void (*)()> tests[] = {
+        {"ClonePreservesTypeAndFields", TestClonePreservesTypeAndFields},
+        {"CloneIsIndependent", TestCloneIsIndependent},
+        {"SetterInvariants", TestSetterInvariants},
+        {"ValidatedInt", TestValidatedInt},
+        {"ValidatedFloat", TestValidatedFloat},
+        {"ValidatedFloatRejectsNonFinite", TestValidatedFloatRejectsNonFinite},
+        {"NonEmptyLine", TestNonEmptyLine},
+        {"AppSmoke", TestAppSmoke},
+        {"AppStudentSmoke", TestAppStudentSmoke},
+        {"AppEmptyDisplayAndClone", TestAppEmptyDisplayAndClone},
+        {"AppInvalidMenuThenValid", TestAppInvalidMenuThenValid},
+        {"AppExitsCleanlyOnEof", TestAppExitsCleanlyOnEof},
+    };
+    for (const auto& [name, fn] : tests) {
+        const int before = failures;
+        std::cout << "test: " << name << '\n';
+        try {
+            fn();
+        } catch (const std::exception& error) {
+            std::cerr << "FAIL: " << name << " threw: " << error.what() << '\n';
+            ++failures;
+        } catch (...) {
+            std::cerr << "FAIL: " << name << " threw an unknown exception\n";
+            ++failures;
+        }
+        if (failures == before) {
+            std::cout << "  ok\n";
+        }
+    }
 
     if (failures != 0) {
         std::cerr << failures << " check(s) failed\n";

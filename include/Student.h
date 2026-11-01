@@ -9,6 +9,13 @@
 /// A concrete peep type representing a student, storing a GPA.
 class Student : public Base {
 public:
+    // GPA is on the US 4.0 scale by assumption, not by any standard the
+    // code can check. If this demo is ever localised, the scale — not
+    // just the numbers — has to change with it. These constants are
+    // the single source of truth for the range; App reads them.
+    static constexpr float kMinGpa = 0.0F;
+    static constexpr float kMaxGpa = 4.0F;
+
     Student() = default;
 
     Student(std::string name, float gpa);
