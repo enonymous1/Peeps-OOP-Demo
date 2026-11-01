@@ -2,12 +2,12 @@ name: Release
 
 # Cutting a release is pushing a tag, AFTER pushing main:
 #   git push origin main
-#   git tag v2.1.0
-#   git push origin v2.1.0
+#   git tag v2.1.1
+#   git push origin v2.1.1
 # The tag must be pushed after main, because the workflow has to be in
 # the tagged commit to run at all. The tag must match the VERSION in
 # CMakeLists.txt (a '-' suffix is allowed for pre-releases, e.g.
-# v2.2.0-rc1 against VERSION 2.2.0); the check-tag step enforces this.
+# v2.1.2-rc1 against VERSION 2.1.2); the check-tag step enforces this.
 #
 # Tag pushes do not trigger CI (it runs on pushes to main and pull
 # requests), so this workflow runs the test suite itself before
@@ -149,5 +149,5 @@ jobs:
             ./*.zip
             SHA256SUMS.txt
           generate_release_notes: true
-          # Tags with a suffix (v2.2.0-rc1) are pre-releases.
+          # Tags with a suffix (v2.1.2-rc1) are pre-releases.
           prerelease: ${{ contains(github.ref_name, '-') }}

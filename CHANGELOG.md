@@ -3,6 +3,23 @@
 All notable changes to this project are documented here. The format
 follows Keep a Changelog, and versioning follows Semantic Versioning.
 
+## [2.1.1] - 2026-11-01
+
+This is the first release to ship the tag-triggered release workflow.
+The `v2.1.0` tag was created before the workflow commit landed, so no
+release was ever published from it and the tag was left untouched;
+the workflow ships here instead.
+
+### Added
+
+- Tag-triggered release workflow (`.github/workflows/release.yml`):
+  pushing a tag `v*.*.*` after pushing `main` runs the tests, checks
+  the tag matches the `CMakeLists.txt` version, builds on Ubuntu,
+  Windows, and macOS, and creates a GitHub Release with one zip per
+  platform (binary + LICENSE) plus `SHA256SUMS.txt`; `-` suffix tags
+  are pre-releases. Prebuilt binaries start with v2.1.1; earlier
+  releases were source-only.
+
 ## [2.1.0] - 2026-10-31
 
 Staff-review fixes, applied in four parts. User-visible behaviour is
@@ -50,13 +67,6 @@ transcript is byte-identical to before.
   Local Development, and Deployment sections, Mermaid architecture
   and clone-sequence diagrams, and a demo GIF rendered from a real
   terminal session (`docs/assets/demo.gif`).
-- Tag-triggered release workflow (`.github/workflows/release.yml`):
-  pushing a tag `v*.*.*` after pushing `main` runs the tests, checks
-  the tag matches the `CMakeLists.txt` version, builds on Ubuntu,
-  Windows, and macOS, and creates a GitHub Release with one zip per
-  platform (binary + LICENSE) plus `SHA256SUMS.txt`; `-` suffix tags
-  are pre-releases. Prebuilt binaries start with v2.1.0; earlier
-  releases were source-only.
 
 ## [2.0.0] - 2026-10-26
 

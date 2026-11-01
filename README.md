@@ -77,7 +77,7 @@ classDiagram
 ## Installation
 
 Download a prebuilt binary from the GitHub Release (starting with
-v2.1.0): pick the zip for your platform (`linux-x64`, `windows-x64`,
+v2.1.1): pick the zip for your platform (`linux-x64`, `windows-x64`,
 `macos-arm64`), unzip it, and run `Peeps_OOP_Demo`
 (`Peeps_OOP_Demo.exe` on Windows). Each zip holds only the binary and
 the LICENSE, so no toolchain is needed. The binaries are unsigned, so
@@ -165,7 +165,7 @@ deliberate: it is a console program, not a service or a website.
 The deployment path is a GitHub Release:
 
 1. Push to `main`. CI builds and tests on Ubuntu, Windows, and macOS.
-2. Tag the release on `main` (for example `v2.1.0`, matching the
+2. Tag the release on `main` (for example `v2.1.1`, matching the
    version in `CMakeLists.txt`), then push the tag. Push the tag
    *after* pushing `main`: the release workflow has to be in the
    tagged commit to run at all, and tag pushes do not trigger CI, so
@@ -174,8 +174,8 @@ The deployment path is a GitHub Release:
    checks the tag matches the `CMakeLists.txt` version, builds on
    Ubuntu, Windows, and macOS, and creates a GitHub Release with one
    zip per platform (binary + LICENSE) plus `SHA256SUMS.txt`. Tags
-   with a `-` suffix (for example `v2.2.0-rc1`) are pre-releases.
-   Prebuilt binaries start with v2.1.0; earlier releases were
+   with a `-` suffix (for example `v2.1.2-rc1`) are pre-releases.
+   Prebuilt binaries start with v2.1.1; earlier releases were
    source-only.
 4. Users without a toolchain use a prebuilt zip; everyone else can
    build from source with the Installation commands above.
