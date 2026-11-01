@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.27)
-project(Peeps_OOP_Demo VERSION 2.0.0 LANGUAGES CXX)
+project(Peeps_OOP_Demo VERSION 2.1.0 LANGUAGES CXX)
 
 option(PEEPS_BUILD_TESTS "Build the Peeps-OOP-Demo tests" ON)
 
